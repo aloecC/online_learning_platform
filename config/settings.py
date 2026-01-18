@@ -34,7 +34,8 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     'rest_framework',
-    'users'
+    'users',
+    'materials'
 ]
 
 MIDDLEWARE = [
@@ -159,6 +160,6 @@ AUTH_USER_MODEL = "users.User"
 #    "default": {
 #        "BACKEND": "django.core.cache.backends.redis.RedisCache",
 #        "LOCATION": "redis://127.0.0.1:6379/1",
-#    }
+#    }]
 #}
 # Redis
