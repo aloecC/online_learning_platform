@@ -35,19 +35,11 @@ class UserViewSet(viewsets.ModelViewSet):
             return UserSerializer  # Для просмотра профиля
         elif self.action in ['update', 'partial_update']:
             return UserProfileEditSerializer  # Для редактирования профиля
+        elif self.action == 'list':
+            return UserSerializerForAnother
         return super().get_serializer_class()
 
     def retrieve(self, request, *args, **kwargs):
-        user = self.get_object()
-        serializer_class = self.get_serializer_class()
-        if user == request.user:
-            serializer = UserSerializer(user)
-        else:
-            serializer = UserSerializerForAnother(user)
-
-        return Response(serializer.data)
-
-    def list(self, request, *args, **kwargs):
         user = self.get_object()
         serializer_class = self.get_serializer_class()
         if user == request.user:
