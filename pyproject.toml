@@ -9,6 +9,7 @@ readme = "README.md"
 python = "^3.13"
 python-dotenv = "^1.2.1"
 django-filter = "^25.2"
+djangorestframework-simplejwt = "^5.5.1"
 
 
 [tool.poetry.group.dev.dependencies]
