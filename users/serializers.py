@@ -9,11 +9,26 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = '__all__'
+        fields = "__all__"
 
     def get_payments(self, obj):
         payments = obj.payments.order_by('payment_date')
         return PaymentSerializer(payments, many=True).data
+
+
+class UserSerializerForAnother(serializers.ModelSerializer):
+    """Сериализатор модели пользователя для посторонних"""
+
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email',]
+
+
+class UserProfileEditSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'first_name', 'last_name', 'password']  # Поля для редактирования
+        extra_kwargs = {'password': {'write_only': True}}  # Пароль только для записи
 
 
 class RegisterSerializer(serializers.ModelSerializer):

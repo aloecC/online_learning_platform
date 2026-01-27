@@ -7,13 +7,58 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from users.models import User, Payment
-from users.serializers import UserSerializer, PaymentSerializer, RegisterSerializer
+from users.permisions import IsOwner
+from users.serializers import UserSerializer, PaymentSerializer, RegisterSerializer, UserProfileEditSerializer, \
+    UserSerializerForAnother
 
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
+
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            self.permission_classes = [IsAuthenticated]
+        elif self.action in ['create', 'destroy', 'update']:
+            self.permission_classes = [IsOwner]
+        else:
+            self.permission_classes = [IsAuthenticated]
+
+        return super().get_permissions()
+
+    def get_queryset(self):
+        return User.objects.all()
+
+    def get_serializer_class(self):
+        if self.action in ['retrieve']:
+            return UserSerializer  # Для просмотра профиля
+        elif self.action in ['update', 'partial_update']:
+            return UserProfileEditSerializer  # Для редактирования профиля
+        return super().get_serializer_class()
+
+    def retrieve(self, request, *args, **kwargs):
+        user = self.get_object()
+        serializer_class = self.get_serializer_class()
+        if user == request.user:
+            serializer = UserSerializer(user)
+        else:
+            serializer = UserSerializerForAnother(user)
+
+        return Response(serializer.data)
+
+    def list(self, request, *args, **kwargs):
+        user = self.get_object()
+        serializer_class = self.get_serializer_class()
+        if user == request.user:
+            serializer = UserSerializer(user)
+        else:
+            serializer = UserSerializerForAnother(user)
+
+        return Response(serializer.data)
+
+    def perform_update(self, serializer):
+        serializer.save()
 
 
 class RegisterView(viewsets.ViewSet):
