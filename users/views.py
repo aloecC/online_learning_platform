@@ -20,7 +20,9 @@ class UserViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action in ['list', 'retrieve']:
             self.permission_classes = [IsAuthenticated]
-        elif self.action in ['create', 'destroy', 'update']:
+        elif self.action in ['create',]:
+            self.permission_classes = [AllowAny]
+        elif self.action in ['destroy', 'update']:
             self.permission_classes = [IsOwner]
         else:
             self.permission_classes = [IsAuthenticated]
@@ -51,6 +53,9 @@ class UserViewSet(viewsets.ModelViewSet):
 
     def perform_update(self, serializer):
         serializer.save()
+
+    def create(self, request, *args, **kwargs):
+        return super().create(request, *args, **kwargs)
 
 
 class RegisterView(viewsets.ViewSet):
