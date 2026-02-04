@@ -1,15 +1,19 @@
-from django.shortcuts import render
-from rest_framework import viewsets, generics
+from django.shortcuts import render, get_object_or_404
+from rest_framework import viewsets, generics, status
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
-from materials.models import Course, Lesson
+from materials.models import Course, Lesson, Subscription
+from materials.paginators import MaterialsPagination
 from materials.permisions import IsModerator, IsOwner, IsRedactManager
-from materials.serializers import CourseSerializer, LessonSerializer
+from materials.serializers import CourseSerializer, LessonSerializer, SubscriptionSerializer
 
 
 class CourseViewSet(viewsets.ModelViewSet):
     serializer_class = CourseSerializer
+    pagination_class = MaterialsPagination
 
     def get_permissions(self):
         if self.action in ['list', 'retrieve', 'update']:
@@ -34,6 +38,12 @@ class CourseViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         return super().create(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        return super().update(request, *args, **kwargs)
+
+    def partial_update(self, request, *args, **kwargs):
+        return super().partial_update(request, *args, **kwargs)
 
 
 class LessonCreateAPIView(generics.CreateAPIView):
@@ -63,6 +73,7 @@ class LessonListAPIView(generics.ListAPIView):
     queryset = Lesson.objects.all()
     serializer_class = LessonSerializer
     permission_classes = [IsModerator | IsOwner]
+    pagination_class = MaterialsPagination
 
 
 class LessonUpdateAPIView(generics.UpdateAPIView):
@@ -85,3 +96,24 @@ class LessonDestroyAPIView(generics.DestroyAPIView):
         if self.request.user.groups.filter(name='Moderators').exists():
             return [IsModerator()]  # Модераторы могут удалять
         return [IsOwner()]  # Остальные могут удалять только свои
+
+
+class SubscriptionView(APIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = SubscriptionSerializer
+
+    def post(self, request, *args, **kwargs):
+        user = self.request.user
+        course_id = request.data.get('course_id')
+
+        course_item = get_object_or_404(Course, id=course_id)
+
+        subs_item = Subscription.objects.filter(user=user, course=course_id)
+
+        if subs_item.exists():  # Используем exists() для проверки наличия
+            subs_item.delete()
+            return Response({'detail': 'Подписка удалена'}, status=200)
+
+        else:
+            Subscription.objects.create(user=user, course=course_item)
+            return Response({'detail': 'Подписка создана'}, status=201)
