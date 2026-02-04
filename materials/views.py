@@ -4,6 +4,7 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework_simplejwt.utils import logger
 
 from materials.models import Course, Lesson, Subscription
 from materials.paginators import MaterialsPagination
@@ -44,6 +45,20 @@ class CourseViewSet(viewsets.ModelViewSet):
 
     def partial_update(self, request, *args, **kwargs):
         return super().partial_update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        """Удаление курса"""
+        logger.debug("Метод destroy вызван")  # Отладочное сообщение
+        instance = self.get_object()
+        logger.debug(f"Попытка удалить курс: {instance.id}")  # Отладочное сообщение
+
+        if instance.owner != request.user and not request.user.groups.filter(name='Модераторы').exists():
+            logger.warning("Попытка удаления курса без прав доступа")  # Отладочное сообщение
+            return Response({'detail': 'У вас нет прав на удаление этого курса.'}, status=status.HTTP_403_FORBIDDEN)
+
+        instance.delete()
+        logger.info(f"Курс {instance.id} успешно удален")  # Отладочное сообщение
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class LessonCreateAPIView(generics.CreateAPIView):
