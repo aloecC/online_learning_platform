@@ -36,7 +36,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'users',
     'materials',
-    'djangorestframework-simplejwt'
+    'rest_framework_simplejwt'
 ]
 
 
