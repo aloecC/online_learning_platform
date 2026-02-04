@@ -86,7 +86,7 @@ class LessonUpdateAPIView(generics.UpdateAPIView):
     serializer_class = LessonSerializer
 
     def get_permissions(self):
-        if self.request.user.groups.filter(name='Moderators').exists():
+        if self.request.user.groups.filter(name='Модераторы').exists():
             self.permission_classes = [IsModerator]
         else:
             self.permission_classes = [IsOwner]
@@ -98,7 +98,7 @@ class LessonDestroyAPIView(generics.DestroyAPIView):
     queryset = Lesson.objects.all()
 
     def get_permissions(self):
-        if self.request.user.groups.filter(name='Moderators').exists():
+        if self.request.user.groups.filter(name='Модераторы').exists():
             return [IsModerator()]  # Модераторы могут удалять
         return [IsOwner()]  # Остальные могут удалять только свои
 
@@ -117,7 +117,7 @@ class SubscriptionView(APIView):
 
         if subs_item.exists():  # Используем exists() для проверки наличия
             subs_item.delete()
-            return Response({'detail': 'Подписка удалена'}, status=200)
+            return Response({'detail': 'Подписка удалена'}, status=204)
 
         else:
             Subscription.objects.create(user=user, course=course_item)
