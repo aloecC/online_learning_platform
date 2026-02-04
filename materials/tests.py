@@ -8,7 +8,7 @@ from materials.models import Course
 from users.models import User
 
 
-class CourseTest(APITestCase):
+class CourseAndLessonTest(APITestCase):
 
     def setUp(self):
         # Создаем группы
@@ -24,7 +24,8 @@ class CourseTest(APITestCase):
         self.redact_manager_group.user_set.add(self.redact_manager)
 
         # Создаем курс для тестирования
-        self.course = Course.objects.create(title='Test Course', description='Test Description', owner=self.user)
+        self.course = Course.objects.create(title='Test Course', description='Test Description', owner=self.redact_manager)
+        self.lesson = Course.objects.create(course=self.course, title='Test Course', description='Test Description', owner=self.redact_manager)
 
     def test_create_course(self):
         """Тест создания курса"""
@@ -100,15 +101,15 @@ class CourseTest(APITestCase):
     def test_delete_course(self):
         """Тест удаления курса"""
         self.client.force_authenticate(user=self.redact_manager)
-        course_new = Course.objects.create(title='NEW Course', description='NEW Description')
-        self.assertIsNotNone(Course.objects.filter(id=course_new.id).first())
+
+        self.assertIsNotNone(Course.objects.filter(id=self.course.id).first())
 
         response = self.client.delete(
-            f'/courses/{course_new.id}/',
+            f'/courses/{self.course.id}/',
         )
 
         # Проверяем статус ответа на удаление
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
         # Проверяем, что курс действительно удален
-        self.assertIsNone(Course.objects.filter(id=course_new.id).first())
+        self.assertIsNone(Course.objects.filter(id=self.course.id).first())

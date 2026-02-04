@@ -48,17 +48,7 @@ class CourseViewSet(viewsets.ModelViewSet):
 
     def destroy(self, request, *args, **kwargs):
         """Удаление курса"""
-        logger.debug("Метод destroy вызван")  # Отладочное сообщение
-        instance = self.get_object()
-        logger.debug(f"Попытка удалить курс: {instance.id}")  # Отладочное сообщение
-
-        if instance.owner != request.user and not request.user.groups.filter(name='Модераторы').exists():
-            logger.warning("Попытка удаления курса без прав доступа")  # Отладочное сообщение
-            return Response({'detail': 'У вас нет прав на удаление этого курса.'}, status=status.HTTP_403_FORBIDDEN)
-
-        instance.delete()
-        logger.info(f"Курс {instance.id} успешно удален")  # Отладочное сообщение
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return super().destroy(request, *args, **kwargs)
 
 
 class LessonCreateAPIView(generics.CreateAPIView):
