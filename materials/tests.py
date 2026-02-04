@@ -1,14 +1,12 @@
 from django.contrib.auth.models import Group
 from rest_framework import status
-from rest_framework.reverse import reverse
 from rest_framework.test import APITestCase
-from rest_framework_simplejwt.tokens import Token
-
-from materials.models import Course
+from materials.models import Course, Lesson, Subscription
 from users.models import User
 
 
-class CourseTest(APITestCase):
+class CourseAndLessonTest(APITestCase):
+    """Тесты проверки курсов и уроков"""
 
     def setUp(self):
         # Создаем группы
@@ -23,8 +21,9 @@ class CourseTest(APITestCase):
         self.moderator_group.user_set.add(self.moderator)
         self.redact_manager_group.user_set.add(self.redact_manager)
 
-        # Создаем курс для тестирования
-        self.course = Course.objects.create(title='Test Course', description='Test Description', owner=self.user)
+        # Создаем курс и урок для тестирования
+        self.course = Course.objects.create(title='Test Course', description='Test Description', owner=self.redact_manager)
+        self.lesson = Lesson.objects.create(course=self.course, title='Test Lesson 1', description='Test L Description',owner=self.redact_manager)
 
     def test_create_course(self):
         """Тест создания курса"""
@@ -52,7 +51,7 @@ class CourseTest(APITestCase):
         }
         # Используем ID курса, который был создан в setUp
         response = self.client.patch(
-            f'/courses/{self.course.id}/',  # Используем self.course.id вместо 1
+            f'/courses/{self.course.id}/',
             data=data
         )
 
@@ -100,15 +99,132 @@ class CourseTest(APITestCase):
     def test_delete_course(self):
         """Тест удаления курса"""
         self.client.force_authenticate(user=self.redact_manager)
-        course_new = Course.objects.create(title='NEW Course', description='NEW Description')
-        self.assertIsNotNone(Course.objects.filter(id=course_new.id).first())
+
+        self.assertIsNotNone(Course.objects.filter(id=self.course.id).first())
 
         response = self.client.delete(
-            f'/courses/{course_new.id}/',
+            f'/courses/{self.course.id}/',
         )
 
         # Проверяем статус ответа на удаление
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
         # Проверяем, что курс действительно удален
-        self.assertIsNone(Course.objects.filter(id=course_new.id).first())
+        self.assertIsNone(Course.objects.filter(id=self.course.id).first())
+
+    def test_create_lesson(self):
+        """Тест создания урока"""
+        self.client.force_authenticate(user=self.redact_manager)
+
+        data = {
+            'course': self.course.id,
+            'title': 'Test Lesson A',
+            'description': 'Test Lesson A'
+        }
+        response = self.client.post(
+            '/lesson/create/',
+            data=data
+        )
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_201_CREATED
+        )
+
+    def test_update_lesson(self):
+        """Тест обновления урока"""
+        self.client.force_authenticate(user=self.moderator)
+
+        data = {
+            'title': 'UL Test',
+        }
+        # Используем ID курса, который был создан в setUp
+        response = self.client.patch(
+            f'/lesson/update/{self.lesson.id}/',
+            data=data
+        )
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_200_OK
+        )
+
+    def test_list_lessons(self):
+        """Тест вывода списка уроков"""
+        self.client.force_authenticate(user=self.moderator)
+
+        response = self.client.get(
+            '/lessons/',
+        )
+
+        self.assertEqual(
+         response.status_code,
+         status.HTTP_200_OK
+     )
+
+        self.assertIsInstance(response.json(), dict)
+
+        self.assertIn('results', response.json())
+        self.assertIsInstance(response.json()['results'], list)
+
+        results = response.json()['results']
+        self.assertGreater(len(results), 0)  # Проверяем, что список не пуст
+        self.assertEqual(results[0]['title'], 'Test Lesson 1')  # Проверяем название курса
+
+    def test_retrieve_lesson(self):
+        """Тест просмотра урока"""
+        self.client.force_authenticate(user=self.moderator)
+
+        response = self.client.get(
+            f'/lesson/{self.lesson.id}/',
+        )
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_200_OK
+        )
+
+    def test_delete_lesson(self):
+        """Тест удаления урока"""
+        self.client.force_authenticate(user=self.moderator)
+
+        self.assertIsNotNone(Lesson.objects.filter(id=self.lesson.id).first())
+
+        response = self.client.delete(
+            f'/lesson/delete/{self.lesson.id}/',
+        )
+
+        # Проверяем статус ответа на удаление
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+        # Проверяем, что курс действительно удален
+        self.assertIsNone(Lesson.objects.filter(id=self.lesson.id).first())
+
+
+class SubscriptionTest(APITestCase):
+    """Тесты проверки подписки"""
+
+    def setUp(self):
+        self.user = User.objects.create_user(username='user', email='user@mail.ru', password='password')
+        self.course = Course.objects.create(title='Test Course', description='Test Description', owner=self.user)
+
+    def test_create_subscription(self):
+        """Тест подключения и удаления подписки """
+        self.client.force_authenticate(user=self.user)
+        data = {
+            'course_id': self.course.id
+        }
+
+        response = self.client.post(
+            '/subscription/',
+            data=data
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        response = self.client.post(
+            '/subscription/',
+            data=data
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
