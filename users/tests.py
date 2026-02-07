@@ -9,17 +9,14 @@ class UserAndPaymentTest(APITestCase):
     def setUp(self):
         self.user = User.objects.create_user(username='user', email='user@mail.ru', password='password')
 
-    def test_create_user(self):
-        """Тест создания пользователя"""
+    def test_retrieve_user(self):
+        """Тест просмотр пользователя"""
 
-        data = {
-            'email': 'user@mail.ru',
-            'username': 'user',
-            'password': 'password'
-        }
+        response = self.client.get(
+            f'/users/{self.user.id}',
 
-        response = self.client.post(
-            '/users/',
-            data=data
         )
+
+
+
 
