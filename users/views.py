@@ -5,7 +5,8 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
-from users.service import convert_rub_to_dollars, create_stripe_price, create_stripe_session
+from users.service import convert_rub_to_dollars, create_stripe_price, create_stripe_session, \
+    create_check_status_payment
 from users.models import User, Payment
 from users.permisions import IsOwner
 from users.serializers import UserSerializer, PaymentSerializer, RegisterSerializer, UserProfileEditSerializer, \
@@ -105,7 +106,21 @@ class PaymentListAPIView(generics.ListAPIView):
 
 
 class PaymentRetrieveAPIView(generics.RetrieveAPIView):
-    """Просмотр платежа"""
+    """Просмотр статуса платежа"""
     serializer_class = PaymentSerializer
     permission_classes = [IsAuthenticated]
-    queryset = Payment.objects.all()
+
+    def get_queryset(self):
+        payment_id = self.kwargs.get('pk')
+        try:
+            payment = Payment.objects.get(pk=payment_id,user=self.request.user)
+            session_id = payment.session_id
+
+            # Проверяем статус платежа через Stripe
+            payment_status = create_check_status_payment(session_id)
+            payment.status = payment_status
+            payment.save()
+            return Payment.objects.filter(pk=payment.id)
+        except Payment.DoesNotExist:
+            return Payment.objects.none()
+

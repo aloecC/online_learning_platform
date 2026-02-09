@@ -33,3 +33,11 @@ def create_stripe_session(price):
 
     return session.get('id'), session.get('url')
 
+
+def create_check_status_payment(session_id):
+    """Реализует проверку статуса платежа"""
+    session = stripe.checkout.Session.retrieve(
+        session_id
+    )
+
+    return session.payment_status

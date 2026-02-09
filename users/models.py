@@ -39,6 +39,7 @@ class Payment(models.Model):
 
     session_id = models.CharField(max_length=255, blank=True, null=True, verbose_name='id сессии')
     link_payment = models.URLField(max_length=450, blank=True, null=True, verbose_name='Ссылка на оплату')
+    status = models.CharField(max_length=10, default="Создан", verbose_name="Статус платежа")
 
     class Meta:
         verbose_name = 'Платеж'
