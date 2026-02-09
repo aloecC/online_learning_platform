@@ -36,7 +36,9 @@ INSTALLED_APPS = [
     'rest_framework',
     'users',
     'materials',
-    'rest_framework_simplejwt'
+    'rest_framework_simplejwt',
+    'drf_yasg',
+    'corsheaders'
 ]
 
 
@@ -60,9 +62,21 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = "config.urls"
+
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:8000',  # Замените на адрес вашего фронтенд-сервера
+]
+
+#CSRF_TRUSTED_ORIGINS = [
+ #   "https://read-and-write.example.com", #  Замените на адрес вашего фронтенд-сервера
+    # и добавьте адрес бэкенд-сервера
+#]
+
+CORS_ALLOW_ALL_ORIGINS = False
 
 TEMPLATES = [
     {
@@ -146,25 +160,4 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # Кастомная настройка пользователя
 AUTH_USER_MODEL = "users.User"
 
-# Настройки для яндекс почты
-#EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-#EMAIL_HOST = "smtp.yandex.ru"
-#EMAIL_PORT = 465  # Исходящая почта, 992- Входящая почта
-#EMAIL_USE_TLS = False
-#EMAIL_USE_SSL = True
-#EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
-#EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
-#DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
-
-#LOGIN_REDIRECT_URL = "mailing:campaign_list"
-#LOGOUT_REDIRECT_URL = "mailing:campaign_list"
-#LOGIN_URL = "users:login"
-
-#CACHES = {
-#    "default": {
-#        "BACKEND": "django.core.cache.backends.redis.RedisCache",
-#        "LOCATION": "redis://127.0.0.1:6379/1",
-#    }]
-#}
-# Redis
+STRIPE_API_KEY = os.getenv('STRIPE_API_KEY')

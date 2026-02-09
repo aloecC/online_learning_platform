@@ -1,4 +1,3 @@
-from django.shortcuts import render
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, generics
 from rest_framework.filters import OrderingFilter
@@ -6,6 +5,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
+from users.service import convert_rub_to_dollars, create_stripe_price, create_stripe_session
 from users.models import User, Payment
 from users.permisions import IsOwner
 from users.serializers import UserSerializer, PaymentSerializer, RegisterSerializer, UserProfileEditSerializer, \
@@ -82,6 +82,16 @@ class PaymentCreateAPIView(generics.CreateAPIView):
     """Создание платежа"""
     serializer_class = PaymentSerializer
     permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        payment = serializer.save(user=self.request.user)
+        course = payment.course
+        amount_in_dollars = convert_rub_to_dollars(course.rub_price)
+        price = create_stripe_price(amount_in_dollars)
+        session_id, payment_link = create_stripe_session(price)
+        payment.session_id = session_id
+        payment.link_payment = payment_link
+        payment.save()
 
 
 class PaymentListAPIView(generics.ListAPIView):
