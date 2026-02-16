@@ -11,6 +11,7 @@ from materials.paginators import MaterialsPagination
 from materials.permisions import IsModerator, IsOwner, IsRedactManager
 from materials.serializers import CourseSerializer, LessonSerializer, SubscriptionSerializer
 from users.models import User
+from django.core.cache import cache
 
 
 class CourseViewSet(viewsets.ModelViewSet):
@@ -45,10 +46,18 @@ class CourseViewSet(viewsets.ModelViewSet):
         response = super().update(request, *args, **kwargs)
 
         course_id = kwargs.get('pk')  # Получаем ID обновленного курса
-        users_emails = Subscription.objects.filter(course_id=course_id).values_list('user__email', flat=True)
+
         # Преобразуем QuerySet в список
-        users_emails_list = list(users_emails)
-        send_mail_after_update.delay(course_id, users_emails_list)
+
+        cache_key = f"course_notify_{course_id}"
+        already_sent = cache.get(cache_key)
+        if not already_sent:
+            emails = list(Subscription.objects.filter(course_id=course_id).values_list('user__email', flat=True))
+            users_emails_list = list(emails)
+            if emails:
+                send_mail_after_update.delay(course_id, users_emails_list)
+                send_mail_after_update.delay(course_id, emails)
+                cache.set(cache_key, True, timeout=4 * 3600)
 
         return response
 
@@ -104,6 +113,21 @@ class LessonUpdateAPIView(generics.UpdateAPIView):
             self.permission_classes = [IsOwner]
 
         return super().get_permissions()
+
+    def send_mail(self):
+        """Отправка письма после обновления"""
+        lesson = self.get_object()
+        course_id = lesson.course_id
+
+        cache_key = f"course_notify_{course_id}"
+        already_sent = cache.get(cache_key)
+        if not already_sent:
+            emails = list(Subscription.objects.filter(course_id=course_id).values_list('user__email', flat=True))
+            users_emails_list = list(emails)
+            if emails:
+                send_mail_after_update.delay(course_id, users_emails_list)
+                send_mail_after_update.delay(course_id, emails)
+                cache.set(cache_key, True, timeout=4 * 3600)
 
 
 class LessonDestroyAPIView(generics.DestroyAPIView):

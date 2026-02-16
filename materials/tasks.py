@@ -1,3 +1,5 @@
+import datetime
+
 from celery import shared_task
 from django.core.mail import send_mail
 
@@ -12,4 +14,5 @@ def send_mail_after_update(course_id, users_email):
         message = f'Курс с ID {course_id} был обновлен.'
         send_mail(subject, message, 'from@example.com', [user_email])
         print(f'Письмо отправлено на {user_email}')
+
 
