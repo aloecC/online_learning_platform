@@ -3,6 +3,7 @@ from rest_framework import viewsets, generics
 from rest_framework.filters import OrderingFilter
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from users.service import convert_rub_to_dollars, create_stripe_price, create_stripe_session, \
@@ -113,7 +114,7 @@ class PaymentRetrieveAPIView(generics.RetrieveAPIView):
     def get_queryset(self):
         payment_id = self.kwargs.get('pk')
         try:
-            payment = Payment.objects.get(pk=payment_id,user=self.request.user)
+            payment = Payment.objects.get(pk=payment_id, user=self.request.user)
             session_id = payment.session_id
 
             # Проверяем статус платежа через Stripe

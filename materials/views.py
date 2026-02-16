@@ -5,11 +5,13 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.utils import logger
-
+from materials.tasks import send_mail_after_update
 from materials.models import Course, Lesson, Subscription
 from materials.paginators import MaterialsPagination
 from materials.permisions import IsModerator, IsOwner, IsRedactManager
 from materials.serializers import CourseSerializer, LessonSerializer, SubscriptionSerializer
+from users.models import User
+from django.core.cache import cache
 
 
 class CourseViewSet(viewsets.ModelViewSet):
@@ -41,7 +43,23 @@ class CourseViewSet(viewsets.ModelViewSet):
         return super().create(request, *args, **kwargs)
 
     def update(self, request, *args, **kwargs):
-        return super().update(request, *args, **kwargs)
+        response = super().update(request, *args, **kwargs)
+
+        course_id = kwargs.get('pk')  # Получаем ID обновленного курса
+
+        # Преобразуем QuerySet в список
+
+        cache_key = f"course_notify_{course_id}"
+        already_sent = cache.get(cache_key)
+        if not already_sent:
+            emails = list(Subscription.objects.filter(course_id=course_id).values_list('user__email', flat=True))
+            users_emails_list = list(emails)
+            if emails:
+                send_mail_after_update.delay(course_id, users_emails_list)
+                send_mail_after_update.delay(course_id, emails)
+                cache.set(cache_key, True, timeout=4 * 3600)
+
+        return response
 
     def partial_update(self, request, *args, **kwargs):
         return super().partial_update(request, *args, **kwargs)
@@ -69,12 +87,14 @@ class LessonCreateAPIView(generics.CreateAPIView):
 
 
 class LessonRetrieveAPIView(generics.RetrieveAPIView):
+    """Вывод информации об уроке"""
     queryset = Lesson.objects.all()
     serializer_class = LessonSerializer
     permission_classes = [IsModerator | IsOwner]
 
 
 class LessonListAPIView(generics.ListAPIView):
+    """Вывод информации об уроках"""
     queryset = Lesson.objects.all()
     serializer_class = LessonSerializer
     permission_classes = [IsModerator | IsOwner]
@@ -82,6 +102,7 @@ class LessonListAPIView(generics.ListAPIView):
 
 
 class LessonUpdateAPIView(generics.UpdateAPIView):
+    """Обновление урока"""
     queryset = Lesson.objects.all()
     serializer_class = LessonSerializer
 
@@ -93,8 +114,24 @@ class LessonUpdateAPIView(generics.UpdateAPIView):
 
         return super().get_permissions()
 
+    def send_mail(self):
+        """Отправка письма после обновления"""
+        lesson = self.get_object()
+        course_id = lesson.course_id
+
+        cache_key = f"course_notify_{course_id}"
+        already_sent = cache.get(cache_key)
+        if not already_sent:
+            emails = list(Subscription.objects.filter(course_id=course_id).values_list('user__email', flat=True))
+            users_emails_list = list(emails)
+            if emails:
+                send_mail_after_update.delay(course_id, users_emails_list)
+                send_mail_after_update.delay(course_id, emails)
+                cache.set(cache_key, True, timeout=4 * 3600)
+
 
 class LessonDestroyAPIView(generics.DestroyAPIView):
+    """Удаление урока"""
     queryset = Lesson.objects.all()
 
     def get_permissions(self):
@@ -104,6 +141,7 @@ class LessonDestroyAPIView(generics.DestroyAPIView):
 
 
 class SubscriptionView(APIView):
+    """Проведение проверки подписки"""
     permission_classes = [IsAuthenticated]
     serializer_class = SubscriptionSerializer
 
@@ -115,10 +153,12 @@ class SubscriptionView(APIView):
 
         subs_item = Subscription.objects.filter(user=user, course=course_id)
 
-        if subs_item.exists():  # Используем exists() для проверки наличия
+        if subs_item.exists():
             subs_item.delete()
             return Response({'detail': 'Подписка удалена'}, status=204)
 
         else:
             Subscription.objects.create(user=user, course=course_item)
             return Response({'detail': 'Подписка создана'}, status=201)
+
+

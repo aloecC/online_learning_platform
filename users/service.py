@@ -23,6 +23,7 @@ def create_stripe_price(amount):
 
     return price
 
+
 def create_stripe_session(price):
     """Создает сессию для оплаты"""
     session = stripe.checkout.Session.create(
