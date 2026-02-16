@@ -113,7 +113,7 @@ class PaymentRetrieveAPIView(generics.RetrieveAPIView):
     def get_queryset(self):
         payment_id = self.kwargs.get('pk')
         try:
-            payment = Payment.objects.get(pk=payment_id,user=self.request.user)
+            payment = Payment.objects.get(pk=payment_id, user=self.request.user)
             session_id = payment.session_id
 
             # Проверяем статус платежа через Stripe
