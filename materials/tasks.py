@@ -3,7 +3,6 @@ import datetime
 from celery import shared_task
 from django.core.mail import send_mail
 
-from materials.models import Course
 
 
 @shared_task
