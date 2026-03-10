@@ -1,12 +1,13 @@
 from django.contrib import admin
 
 from config import settings
-from materials.models import Lesson, Course
+from materials.models import Course, Lesson
 
 
 @admin.register(Lesson)
 class LessonAdmin(admin.ModelAdmin):
     """Административный интерфейс для управления уроками"""
+
     list_display = (id, "course", "title", "preview", "description", "video")
     list_filter = ("course",)  # Фильтрация
     search_fields = (
@@ -19,6 +20,7 @@ class LessonAdmin(admin.ModelAdmin):
 @admin.register(Course)
 class CourseAdmin(admin.ModelAdmin):
     """Административный интерфейс для управления курсами."""
+
     list_display = (id, "title", "preview", "description")
     list_filter = ("title",)  # Фильтрация
     search_fields = (

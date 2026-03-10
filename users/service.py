@@ -1,7 +1,7 @@
 import stripe
-from config.settings import STRIPE_API_KEY
 from forex_python.converter import CurrencyRates
 
+from config.settings import STRIPE_API_KEY
 
 stripe.api_key = STRIPE_API_KEY
 
@@ -9,7 +9,7 @@ stripe.api_key = STRIPE_API_KEY
 def convert_rub_to_dollars(amount):
     """Конвертирует рубли в доллары"""
     c = CurrencyRates()
-    rate = c.get_rate('RUB', 'USD')
+    rate = c.get_rate("RUB", "USD")
     return int(amount * rate)
 
 
@@ -32,13 +32,11 @@ def create_stripe_session(price):
         mode="payment",
     )
 
-    return session.get('id'), session.get('url')
+    return session.get("id"), session.get("url")
 
 
 def create_check_status_payment(session_id):
     """Реализует проверку статуса платежа"""
-    session = stripe.checkout.Session.retrieve(
-        session_id
-    )
+    session = stripe.checkout.Session.retrieve(session_id)
 
     return session.payment_status

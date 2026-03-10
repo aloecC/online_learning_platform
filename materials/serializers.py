@@ -9,23 +9,28 @@ class LessonSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Lesson
-        fields = '__all__'
+        fields = "__all__"
         validators = [
-            VideoValidator(field='video'),
-            serializers.UniqueTogetherValidator(fields=['title', 'description'], queryset=Course.objects.all())
+            VideoValidator(field="video"),
+            serializers.UniqueTogetherValidator(
+                fields=["title", "description"], queryset=Course.objects.all()
+            ),
         ]
 
 
 class CourseSerializer(serializers.ModelSerializer):
     """Сериализатор модели курсов"""
+
     quantity_lesson = serializers.SerializerMethodField(read_only=True)
     lessons = LessonSerializer(many=True, read_only=True)
 
     class Meta:
         model = Course
-        fields = '__all__'
+        fields = "__all__"
         validators = [
-            serializers.UniqueTogetherValidator(fields=['title', 'description'], queryset=Course.objects.all())
+            serializers.UniqueTogetherValidator(
+                fields=["title", "description"], queryset=Course.objects.all()
+            )
         ]
 
     def get_quantity_lesson(self, obj):
@@ -35,9 +40,12 @@ class CourseSerializer(serializers.ModelSerializer):
 
 class SubscriptionSerializer(serializers.ModelSerializer):
     """Сериализатор подписки"""
+
     class Meta:
         model = Subscription
-        fields = '__all__'
+        fields = "__all__"
         validators = [
-            serializers.UniqueTogetherValidator(fields=['user', 'course'], queryset=Subscription.objects.all())
+            serializers.UniqueTogetherValidator(
+                fields=["user", "course"], queryset=Subscription.objects.all()
+            )
         ]

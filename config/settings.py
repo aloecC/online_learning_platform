@@ -33,28 +33,25 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    'rest_framework',
-    'users',
-    'materials',
-    'rest_framework_simplejwt',
-    'drf_yasg',
-    'corsheaders',
-    'django_celery_beat',
-    'django_celery_results'
-
+    "rest_framework",
+    "users",
+    "materials",
+    "rest_framework_simplejwt",
+    "drf_yasg",
+    "corsheaders",
+    "django_celery_beat",
+    "django_celery_results",
 ]
 
 
 REST_FRAMEWORK = {
-    'DEFAULT_FILTER_BACKENDS': (
-        'django_filters.rest_framework.DjangoFilterBackend',
+    "DEFAULT_FILTER_BACKENDS": ("django_filters.rest_framework.DjangoFilterBackend",),
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny', #IsAuthenticated - если нужно на все поставить условие автризации
-    ]
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.AllowAny",  # IsAuthenticated - если нужно на все поставить условие автризации
+    ],
 }
 
 MIDDLEWARE = [
@@ -65,19 +62,19 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    'corsheaders.middleware.CorsMiddleware',
+    "corsheaders.middleware.CorsMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"
 
 CORS_ALLOWED_ORIGINS = [
-    'http://localhost:8000',  # Замените на адрес вашего фронтенд-сервера
+    "http://localhost:8000",  # Замените на адрес вашего фронтенд-сервера
 ]
 
-#CSRF_TRUSTED_ORIGINS = [
- #   "https://read-and-write.example.com", #  Замените на адрес вашего фронтенд-сервера
-    # и добавьте адрес бэкенд-сервера
-#]
+# CSRF_TRUSTED_ORIGINS = [
+#   "https://read-and-write.example.com", #  Замените на адрес вашего фронтенд-сервера
+# и добавьте адрес бэкенд-сервера
+# ]
 
 CORS_ALLOW_ALL_ORIGINS = False
 
@@ -109,7 +106,7 @@ DATABASES = {
         "USER": os.getenv("USER"),
         "PASSWORD": os.getenv("PASSWORD"),
         "HOST": os.getenv("HOST", "db"),
-        "PORT": os.getenv("PORT", '5432'),
+        "PORT": os.getenv("PORT", "5432"),
     }
 }
 
@@ -155,7 +152,9 @@ CACHES = {
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = "static/"  # Маршрут для доступа к статике
-STATICFILES_DIRS = [BASE_DIR / "static"]  # Список директорий на диске из которых подгружаются статические файлы
+STATICFILES_DIRS = [
+    BASE_DIR / "static"
+]  # Список директорий на диске из которых подгружаются статические файлы
 
 MEDIA_URL = "/media/"  # Маршрут для доступа к медиа-файлам
 MEDIA_ROOT = BASE_DIR / "media"
@@ -168,7 +167,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # Кастомная настройка пользователя
 AUTH_USER_MODEL = "users.User"
 
-STRIPE_API_KEY = os.getenv('STRIPE_API_KEY')
+STRIPE_API_KEY = os.getenv("STRIPE_API_KEY")
 
 # Настройки для яндекс почты
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
@@ -181,5 +180,5 @@ EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
-CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://redis:6379/0')
-CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://redis:6379/1')
+CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "redis://redis:6379/0")
+CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", "redis://redis:6379/1")
