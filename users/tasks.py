@@ -1,6 +1,8 @@
 from datetime import datetime, timedelta
-from django.utils import timezone
+
 from celery import shared_task
+from django.utils import timezone
+
 from users.models import User
 
 
@@ -11,10 +13,13 @@ def blocking_user():
     users = User.objects.all()
     for user in users:
 
-        if user.last_login is not None and (timezone.now() - user.last_login) >= timedelta(days=31):
+        if user.last_login is not None and (
+            timezone.now() - user.last_login
+        ) >= timedelta(days=31):
             user.is_active = False
             user.save()
             print(f"Пользователь {user.username} был заблокирован.")
         else:
-            print(f"Пользователь {user.username} активен или только что вошел в систему.")
-
+            print(
+                f"Пользователь {user.username} активен или только что вошел в систему."
+            )

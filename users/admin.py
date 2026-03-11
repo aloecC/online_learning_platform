@@ -7,8 +7,21 @@ from users.models import Payment, User
 
 @admin.register(Payment)
 class PaymentAdmin(admin.ModelAdmin):
-    list_display = (id, "user", "payment_date", "course", "lesson", "payment_amount", "payment_method")
-    list_filter = ("course", "user", "payment_method", "payment_date",)  # Фильтрация
+    list_display = (
+        id,
+        "user",
+        "payment_date",
+        "course",
+        "lesson",
+        "payment_amount",
+        "payment_method",
+    )
+    list_filter = (
+        "course",
+        "user",
+        "payment_method",
+        "payment_date",
+    )  # Фильтрация
     search_fields = (
         "lesson",
         "course",
@@ -25,5 +38,3 @@ class CustomUserAdmin(UserAdmin):
 
 
 admin.site.register(User, CustomUserAdmin)
-
-
